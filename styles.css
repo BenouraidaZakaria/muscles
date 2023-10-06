@@ -1,0 +1,45 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 60vw 40vw;
+  height: 100%;
+}
+
+.model-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #0d5eff;
+}
+
+.workout-button {
+  margin-bottom: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #074db4;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.workout-button:hover {
+  background-color: #075dd6;
+}
