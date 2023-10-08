@@ -13,11 +13,6 @@ camera.position.set(
   5.8461286926353462,
   5.688741535228839
 );
-camera.rotation.set(
-  -0.48633526555725765,
-  -0.004223697536955033,
-  -0.0022330160769621753
-);
 
 // Set up renderer
 const renderer = new THREE.WebGLRenderer();
@@ -32,9 +27,11 @@ directionalLight.position.set(5, 10, 7); // Adjust the light position as needed
 directionalLight.castShadow = true; // Enable shadow casting
 scene.add(directionalLight);
 
+let mixer; // Declare a variable to hold the animation mixer
+
 // Load the GLTF model
 const loader = new THREE.GLTFLoader();
-loader.load("./idle.glb", (gltf) => {
+loader.load("./burpee.glb", (gltf) => {
   const model = gltf.scene;
 
   // Scale the model (for example, scale it by 2 times along all axes)
@@ -49,6 +46,24 @@ loader.load("./idle.glb", (gltf) => {
   });
 
   scene.add(model);
+
+  // Create an AnimationMixer and associate it with the model
+  mixer = new THREE.AnimationMixer(model);
+
+  // Get all the animations from the loaded model
+  const animations = gltf.animations;
+
+  // Check if there are animations
+  if (animations && animations.length > 0) {
+    // For simplicity, let's assume the first animation is the one you want to play
+    const firstAnimation = animations[0];
+
+    // Create an AnimationAction to play the animation
+    const action = mixer.clipAction(firstAnimation);
+
+    // Play the animation
+    action.play();
+  }
 
   // Adjust the target for OrbitControls
   const boundingBox = new THREE.Box3().setFromObject(model);
@@ -73,8 +88,12 @@ function animate() {
 
   // Update controls
   controls.update();
-  console.log(camera.position);
-  console.log(camera.rotation);
+
+  // Update the animation mixer
+  if (mixer) {
+    mixer.update(0.01); // Update the animation (adjust the time delta as needed)
+  }
+
   // Render the scene with the camera
   renderer.render(scene, camera);
 }
