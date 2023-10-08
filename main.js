@@ -21,61 +21,90 @@ renderer.setClearColor(0x3498db); // Set plain color background (hexadecimal val
 renderer.shadowMap.enabled = true; // Enable shadows in renderer
 document.getElementById("scene-container").appendChild(renderer.domElement);
 
-// Add directional light with shadows
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 10, 7); // Adjust the light position as needed
-directionalLight.castShadow = true; // Enable shadow casting
-scene.add(directionalLight);
-
 let mixer; // Declare a variable to hold the animation mixer
+let idleAction; // Declare a variable to hold the idle animation action
+let animations = []; // An array to store loaded animations
 
-// Load the GLTF model
+// Load the GLTF model and its animations
 const loader = new THREE.GLTFLoader();
-loader.load("./burpee.glb", (gltf) => {
+loader.load("./idle.glb", (gltf) => {
   const model = gltf.scene;
 
-  // Scale the model (for example, scale it by 2 times along all axes)
-  model.scale.set(2, 2, 2); // Adjust the scale factors as needed
-
-  // Enable shadows for the model
-  model.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  // Scale, shadow, and other setup for the model here
 
   scene.add(model);
 
+  // Get the animations from the loaded model
+  animations = gltf.animations;
+
   // Create an AnimationMixer and associate it with the model
   mixer = new THREE.AnimationMixer(model);
+  idleAction = mixer.clipAction(animations[10]); // Idle animation
 
-  // Get all the animations from the loaded model
-  const animations = gltf.animations;
+  // Play the idle animation by default
+  idleAction.play();
 
-  // Check if there are animations
-  if (animations && animations.length > 0) {
-    // For simplicity, let's assume the first animation is the one you want to play
-    const firstAnimation = animations[0];
-
-    // Create an AnimationAction to play the animation
-    const action = mixer.clipAction(firstAnimation);
-
-    // Play the animation
-    action.play();
-  }
-
-  // Adjust the target for OrbitControls
-  const boundingBox = new THREE.Box3().setFromObject(model);
-  const target = boundingBox.getCenter(new THREE.Vector3());
-  camera.lookAt(target);
+  // Add event listeners to workout buttons
+  const workoutButtons = document.querySelectorAll(".workout-button");
+  workoutButtons.forEach((button) => {
+    button.addEventListener("click", handleButtonClick);
+  });
 });
+const planeGeometry = new THREE.BoxGeometry(10, 0.1, 10); // Create a cube-shaped plane with width, height, and depth (adjust as needed)
+const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 }); // Black color material
+const plane = new THREE.Mesh(planeGeometry, planeMaterial); // Create a mesh with geometry and material
+plane.position.set(0, -0.05, 0); // Set the position of the cube-shaped plane to (0, -0.05, 0) to avoid z-fighting with the ground plane
+plane.receiveShadow = true; // Enable shadow casting for the cube-shaped plane
+scene.add(plane); // Add the cube-shaped plane to the scene
 
 // Add ambient light to the scene
 const ambientLight = new THREE.AmbientLight(0xffffff, 5); // soft white light
 scene.add(ambientLight);
+// Function to handle button click events
+function handleButtonClick(event) {
+  const buttonId = event.target.id;
+  const animationName = buttonToAnimation[buttonId];
 
-// Set up OrbitControls
+  if (animationName) {
+    // Find the animation corresponding to the clicked button
+    const animation = animations.find((anim) => anim.name === animationName);
+
+    if (animation) {
+      // Stop the idle animation
+      idleAction.stop();
+
+      // Stop any currently playing animations
+      mixer.stopAllAction();
+
+      // Play the selected animation
+      const action = mixer.clipAction(animation);
+      action.play();
+    }
+  }
+}
+// Function to handle button click events
+function handleButtonClick(event) {
+  const buttonName = event.target.innerText;
+
+  // Find the animation corresponding to the clicked button
+  const animation = animations.find((anim) =>
+    anim.name.toLowerCase().includes(buttonName.toLowerCase())
+  );
+
+  if (animation) {
+    // Stop the idle animation
+    idleAction.stop();
+
+    // Stop any currently playing animations
+    mixer.stopAllAction();
+
+    // Play the selected animation
+    const action = mixer.clipAction(animation);
+    action.play();
+  }
+}
+
+// Set up OrbitControls or any other controls you prefer
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.25; // friction factor (0: no damping, 1: full damping)
